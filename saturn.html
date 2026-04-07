@@ -2,52 +2,61 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>Sao Thổ 3D - Final Cinematic</title>
+  <title>Sao Thổ 3D - Clean Version</title>
+
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600&display=swap" rel="stylesheet">
+
   <style>
     body { margin: 0; overflow: hidden; background: #000; }
     canvas { display: block; }
   </style>
 </head>
+
 <body>
 <script type="module">
 import * as THREE from 'https://unpkg.com/three@0.152.2/build/three.module.js';
 
-const scene = new THREE.Scene(); // khởi tạo scence
-scene.fog = new THREE.FogExp2(0x000000, 0.015);
+/* =========================================================
+   1. SCENE (KHÔNG GIAN)
+========================================================= */
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000000);
+scene.fog = new THREE.FogExp2(0x000000, 0.01);
 
-// ====== tạo thế giới =====
-const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000); // góc nhìn
-camera.position.set(0, 0, 5); // đặt cách hành tinh 5 đơn vị
 
-const renderer = new THREE.WebGLRenderer({ antialias: true }); // vẽ bằng WebGL -> antialias: true -> mịn hơn
+/* =========================================================
+   2. CAMERA
+========================================================= */
+const camera = new THREE.PerspectiveCamera(
+  60,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  1000
+);
+camera.position.set(0, 0, 5);
+
+
+/* =========================================================
+   3. RENDERER (HIỂN THỊ)
+========================================================= */
+const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// ===== SIGNATURE =====
-const signature = document.createElement('div');
-signature.innerText = "Lê Đức Thắng"; // đổi tên bạn ở đây
 
-signature.style.position = 'fixed';
-signature.style.left = '20px';
-signature.style.bottom = '20px';
-signature.style.color = 'rgba(255,255,255,0.7)';
-signature.style.fontFamily = "'Dancing Script', cursive";
-signature.style.fontSize = '18px';
-signature.style.pointerEvents = 'none';
-signature.style.letterSpacing = '1px';
-signature.style.opacity = '0.8';
-
-document.body.appendChild(signature);
-
-// ===== LIGHTING =====
-const light = new THREE.DirectionalLight(0xffffff, 1.8); // ánh sáng giống mặt trời chiếu
+/* =========================================================
+   4. LIGHTING (ÁNH SÁNG)
+========================================================= */
+const light = new THREE.DirectionalLight(0xffffff, 1.8);
 light.position.set(5, 3, 5);
 scene.add(light);
-scene.add(new THREE.AmbientLight(0x222222)); // ánh sáng nền nhẹ
 
-// ===== PLANET TEXTURE =====
-// vẽ bằng canvas
+scene.add(new THREE.AmbientLight(0x222222));
+
+
+/* =========================================================
+   5. TẠO TEXTURE SAO THỔ (CANVAS)
+========================================================= */
 function createSaturnTexture() {
   const canvas = document.createElement('canvas');
   canvas.width = 2048;
@@ -57,7 +66,7 @@ function createSaturnTexture() {
   for (let y = 0; y < canvas.height; y++) {
     const t = y / canvas.height;
 
-    const base = 180 + Math.sin(t * 30) * 25; // dùng sin để tạo văn sọc -> màu thay đổi theo sóng, giống khí gas của sao thổ
+    const base = 180 + Math.sin(t * 30) * 25;
     const r = base + Math.sin(t * 80) * 10;
     const g = base - 20 + Math.sin(t * 50) * 10;
     const b = base - 60 + Math.sin(t * 40) * 10;
@@ -69,9 +78,12 @@ function createSaturnTexture() {
   return new THREE.CanvasTexture(canvas);
 }
 
-// ===== PLANET =====
+
+/* =========================================================
+   6. TẠO HÀNH TINH
+========================================================= */
 const saturn = new THREE.Mesh(
-  new THREE.SphereGeometry(1, 256, 256), // tạo hành tinh, bk = 1, rất mịn (256 segments)
+  new THREE.SphereGeometry(1, 128, 128),
   new THREE.MeshStandardMaterial({
     map: createSaturnTexture(),
     roughness: 0.85,
@@ -79,18 +91,21 @@ const saturn = new THREE.Mesh(
   })
 );
 
-saturn.scale.set(2.3, 2.3, 2.3); // phóng to lên
-saturn.rotation.z = THREE.MathUtils.degToRad(60); // nghiêng giống sao thổ thật
+saturn.scale.set(2.3, 2.3, 2.3);
+saturn.rotation.z = THREE.MathUtils.degToRad(60);
 
-// ===== GROUP hệ sao thổ =====
-// gom: hành tinh, vành đai -> dễ xoay, di chuyển cùng nhau
+
+/* =========================================================
+   7. GROUP CHÍNH (HỆ SAO THỔ)
+========================================================= */
 const saturnSystem = new THREE.Group();
 saturnSystem.add(saturn);
 scene.add(saturnSystem);
 
 
-// ===== PARTICLE TEXTURE =====
-// tạo textture hình tròn mờ, trắng ở giữa, trong suốt ở rìa -> dùng cho mỗi hạt trong vành đai
+/* =========================================================
+   8. PARTICLE TEXTURE (CHO VÀNH ĐAI)
+========================================================= */
 function createParticleTexture() {
   const size = 64;
   const canvas = document.createElement('canvas');
@@ -98,7 +113,11 @@ function createParticleTexture() {
   canvas.height = size;
   const ctx = canvas.getContext('2d');
 
-  const gradient = ctx.createRadialGradient(size/2, size/2, 2, size/2, size/2, size/2);
+  const gradient = ctx.createRadialGradient(
+    size/2, size/2, 2,
+    size/2, size/2, size/2
+  );
+
   gradient.addColorStop(0, 'rgba(255,255,255,0.8)');
   gradient.addColorStop(0.5, 'rgba(180,180,180,0.4)');
   gradient.addColorStop(1, 'rgba(0,0,0,0)');
@@ -111,11 +130,14 @@ function createParticleTexture() {
 
 const particleTexture = createParticleTexture();
 
-// ===== RING =====
+
+/* =========================================================
+   9. TẠO VÀNH ĐAI (PARTICLES)
+========================================================= */
 const ringGroup = new THREE.Group();
 saturnSystem.add(ringGroup);
 
-const particleCount = 4000; // vành đại sao thổi -> 4000 hạt
+const particleCount = 4000;
 const innerRadius = 1.2 * 2.3;
 const outerRadius = 1.9 * 2.3;
 
@@ -123,7 +145,6 @@ const positions = [];
 const colors = [];
 const speeds = [];
 
-// màu xám - trắng -> giống băng đá
 const palette = [
   new THREE.Color('#d9d9d9'),
   new THREE.Color('#bfbfbf'),
@@ -132,45 +153,34 @@ const palette = [
 ];
 
 for (let i = 0; i < particleCount; i++) {
-  const band = Math.random();
-  let r;
-
-  if (band < 0.35) {
-    r = THREE.MathUtils.lerp(innerRadius, innerRadius + 0.2, Math.random());
-  } else if (band < 0.7) {
-    r = THREE.MathUtils.lerp(innerRadius + 0.3, outerRadius - 0.4, Math.random());
-  } else {
-    r = THREE.MathUtils.lerp(outerRadius - 0.2, outerRadius, Math.random());
-  }
-
+  let r = THREE.MathUtils.lerp(innerRadius, outerRadius, Math.random());
   const angle = Math.random() * Math.PI * 2;
 
-  // vị trí hạt
   const x = Math.cos(angle) * r;
   const z = Math.sin(angle) * r;
-  const y = (Math.random() - 0.5) * 0.04;
+  const y = (Math.random() - 0.5) * 0.05;
 
   positions.push(x, y, z);
 
   const c = palette[Math.floor(Math.random() * palette.length)];
   colors.push(c.r, c.g, c.b);
 
-  // mỗi hạt quay với tốc độ khác nhau -> nhìn tự nhiên
   speeds.push(0.00005 + Math.random() * 0.00015);
 }
 
-// lưu vị trí, màu -> tối ưu cho hàng nghìn điểm
+
+/* =========================================================
+   10. GEOMETRY + MATERIAL + PARTICLES
+========================================================= */
 const geometry = new THREE.BufferGeometry();
 geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
 geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 
-// hình dạng điểm
 const material = new THREE.PointsMaterial({
   map: particleTexture,
-  size: 0.025,
+  size: 0.03,
   vertexColors: true,
   transparent: true,
-  opacity: 0.9,
   depthWrite: false
 });
 
@@ -178,12 +188,39 @@ const particles = new THREE.Points(geometry, material);
 ringGroup.add(particles);
 
 ringGroup.rotation.z = THREE.MathUtils.degToRad(60);
-ringGroup.rotation.x = THREE.MathUtils.degToRad(1);
 
-// ===== POSITION =====
-saturnSystem.position.set(1.6, -1.1, 0);
 
-// ===== CAMERA ANIMATION (cinematic drift) =====
+/* =========================================================
+   11. SIGNATURE UI
+========================================================= */
+const signature = document.createElement('div');
+signature.innerText = "Lê Đức Thắng";
+
+Object.assign(signature.style, {
+  position: 'fixed',
+  left: '20px',
+  bottom: '20px',
+  color: 'rgba(255,255,255,0.7)',
+  fontFamily: "'Dancing Script', cursive",
+  fontSize: '18px'
+});
+
+document.body.appendChild(signature);
+
+
+/* =========================================================
+   12. RESIZE
+========================================================= */
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+
+/* =========================================================
+   13. ANIMATION LOOP
+========================================================= */
 let t = 0;
 
 function animate() {
@@ -191,22 +228,17 @@ function animate() {
 
   t += 0.002;
 
-  // camera slow drift
-  // camera cinematic mạnh hơn (focus vào hành tinh)
-const target = new THREE.Vector3(1.6, -1.1, 0); // đúng vị trí saturnSystem
+  // camera cinematic
+  camera.position.x = Math.sin(t * 0.6) * 1.2;
+  camera.position.z = 5 + Math.cos(t * 0.4) * 0.8;
+  camera.position.y = Math.sin(t * 0.3) * 0.4;
 
-camera.position.x = Math.sin(t * 0.6) * 1.2;
-camera.position.z = 5 + Math.cos(t * 0.4) * 0.8;
-camera.position.y = Math.sin(t * 0.3) * 0.4;
+  camera.lookAt(0, 0, 0);
 
-// zoom in/out nhẹ → tạo chiều sâu reel
-camera.fov = 60 + Math.sin(t * 0.5) * 3;
-camera.updateProjectionMatrix();
+  // xoay hành tinh
+  saturn.rotation.y += 0.002;
 
-// luôn nhìn vào hành tinh
-camera.lookAt(target);
-
-  // ring rotation
+  // xoay vành đai
   const pos = geometry.attributes.position.array;
   for (let i = 0; i < particleCount; i++) {
     const i3 = i * 3;
@@ -218,25 +250,17 @@ camera.lookAt(target);
     const cos = Math.cos(a);
     const sin = Math.sin(a);
 
-    // công thức quay 2d
     pos[i3] = x * cos - z * sin;
     pos[i3 + 2] = x * sin + z * cos;
   }
 
-  // báo Three.js cập nhật lại GPU
   geometry.attributes.position.needsUpdate = true;
 
   renderer.render(scene, camera);
 }
 
-animate(); // loop vô hạn
+animate();
 
-// resize màn hình
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
 </script>
 </body>
 </html>
